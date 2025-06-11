@@ -1,0 +1,417 @@
+{
+  "name": "test wsp model",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": "={{ 1 }}"
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1560,
+        140
+      ],
+      "id": "119c53d9-98cb-4108-a2e4-6617a964321f",
+      "name": "Schedule Trigger",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tomar el timestamp ISO con offset, ejemplo: \"2025-06-03T15:49:34-04:00\"\nconst fechaOriginal = $json.timestamp;\n\n// Convertir a objeto Date (JavaScript ajusta automáticamente según el offset del string)\nconst fecha = new Date(fechaOriginal);\n\n// Restar 5 minutos\nfecha.setMinutes(fecha.getMinutes() - 5);\n\n// Formatear el resultado como \"YYYY-MM-DD HH:mm:ss\" en la hora local del offset original\nfunction pad(n) {\n  return n.toString().padStart(2, '0');\n}\n\nconst yyyy = fecha.getFullYear();\nconst mm = pad(fecha.getMonth() + 1);\nconst dd = pad(fecha.getDate());\nconst hh = pad(fecha.getHours()-5);\nconst mi = pad(fecha.getMinutes());\nconst ss = pad(fecha.getSeconds());\n\nconst detectionDateFormat = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;\n\nreturn [{ json: { detectionDateFormat } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -1340,
+        140
+      ],
+      "id": "175c425f-1f6b-4683-a37e-94963a55e451",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n    d.id,\n    d.uuid,\n    d.detectionDate,\n    d.id_company,\n    d.extraData,\n    d.id_type,\n    t.gls AS tipo_gls,\n    i.imageURL AS image_url\nFROM\n    ta_detection d\nLEFT JOIN\n    ta_type t ON d.id_type = t.id\nLEFT JOIN\n    ta_image i ON d.image_id = i.id\nWHERE\n    d.detectionDate > \"{{ $json.detectionDateFormat }}\"\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        -1080,
+        40
+      ],
+      "id": "33db5fb4-81dc-4985-8f0b-5881a34939a4",
+      "name": "query_ta_detection",
+      "credentials": {
+        "mySql": {
+          "id": "7kKWAZSkfm4em4xV",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "keys",
+        "keyPattern": "=*_buffer"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -1100,
+        240
+      ],
+      "id": "f8d04cac-3c4c-4de1-8be5-2a82f9ed623a",
+      "name": "Redis",
+      "executeOnce": true,
+      "credentials": {
+        "redis": {
+          "id": "wgujLjaLOLewAyRZ",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "uuid",
+              "field2": "uuid"
+            }
+          ]
+        },
+        "resolve": "preferInput1",
+        "options": {
+          "skipFields": "",
+          "multipleMatches": "first"
+        }
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        -760,
+        40
+      ],
+      "id": "b66a7493-9999-488a-94f3-394a9f1175bd",
+      "name": "Compare Datasets",
+      "executeOnce": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ Así sí funciona\nreturn items.flatMap(item => {\n  // Aquí 'item' SÍ existe como cada uno del array\n  const input = item.json;\n  // ...lo que quieras hacer\n  // Por ejemplo:\n  return Object.keys(input).map(bufferKey => {\n    return {\n      json: {\n        key: bufferKey,\n        uuid: input[bufferKey][0] // suponiendo que es un array de un solo elemento\n      }\n    }\n  });\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -900,
+        240
+      ],
+      "id": "b5ad69f7-ba3a-4e86-9a91-e705345d46fb",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "content": "arreglar formateo de fecha.chatgpt"
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -1440,
+        -60
+      ],
+      "id": "9f7528c4-03da-4637-b8c7-c140b06870ac",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.31.190.111:8081/message/sendText/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "56939050942"
+            },
+            {
+              "name": "text",
+              "value": "={{ $json.id_company }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -1560,
+        -220
+      ],
+      "id": "742976a9-5831-47ff-bb57-b3d7184b854a",
+      "name": "HTTP Request",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "rOR6sChAue93guv9",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "pop",
+        "list": "={{ $('Code1').item.json.key }}",
+        "tail": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        -440,
+        420
+      ],
+      "id": "eddc3f48-9c3e-40ee-9ae7-7c95230bb8f6",
+      "name": "Redis1",
+      "credentials": {
+        "redis": {
+          "id": "wgujLjaLOLewAyRZ",
+          "name": "Redis account"
+        }
+      }
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        -140,
+        420
+      ],
+      "id": "3ebe250b-27bc-451d-930f-7e1fca9e6d58",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.31.190.111:8081/message/sendMedia/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "=json",
+        "specifyBody": "json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"number\": \"120363405083104814@g.us\",\n  \"mediatype\": \"image\",\n  \"mimetype\": \"image/png\",\n  \"caption\": \"*Alerta*: {{ $json.tipo_gls }}\\n*Fecha*: {{ $json.detectionDate }}\",\n  \"media\": \"{{ $json.image_url }}\",\n  \"fileName\": \"Imagem.png\",\n  \"delay\": 1000\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        220,
+        40
+      ],
+      "id": "81a00299-fa68-47e0-b63e-957845e2e1ca",
+      "name": "send_wsp_message_file",
+      "executeOnce": true,
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "rOR6sChAue93guv9",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "mensaje a INDIVIDUOS"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -660,
+        -420
+      ],
+      "id": "cdef48f1-7e92-4a47-a6f3-ed638cf311c6",
+      "name": "HTTP Request1"
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 13,
+        "output": "={{ $json.id_type }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        -140,
+        -240
+      ],
+      "id": "3f15379d-2add-465f-a86a-434a4d9c5001",
+      "name": "Switch"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "query_ta_detection",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Redis",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "query_ta_detection": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "HTTP Request": {
+      "main": [
+        []
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_wsp_message_file": {
+      "main": [
+        []
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [
+          {
+            "node": "send_wsp_message_file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1",
+    "timezone": "America/Santiago",
+    "callerPolicy": "workflowsFromSameOwner"
+  },
+  "versionId": "3cc67e0c-5dc3-4acf-bd57-93f7ddbd7248",
+  "meta": {
+    "templateId": "self-building-ai-agent",
+    "templateCredsSetupCompleted": true,
+    "instanceId": "a4f7a0b4913cd93f43c9f84ada8ca05ea6ce1ab8f043d19939c737e8102c3295"
+  },
+  "id": "EOQOZu8gK7asdhKL",
+  "tags": [
+    {
+      "createdAt": "2025-06-03T15:27:27.935Z",
+      "updatedAt": "2025-06-03T15:27:27.935Z",
+      "id": "ZIX6DYXb0GHB2aWH",
+      "name": "personal"
+    }
+  ]
+}
