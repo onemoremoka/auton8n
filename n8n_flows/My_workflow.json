@@ -1,0 +1,602 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": "={{ 5 }}"
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1500,
+        560
+      ],
+      "id": "77f9c5ef-9313-4bee-ab56-039ddfc23ff5",
+      "name": "Schedule Trigger",
+      "notesInFlow": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "jsCode": "// Tomar el timestamp ISO con offset, ejemplo: \"2025-06-03T15:49:34-04:00\"\nconst fechaOriginal = $('Global Constants').first().json.timestamp\n\n// Convertir a objeto Date (JavaScript ajusta automáticamente según el offset del string)\nconst fecha = new Date(fechaOriginal);\n\n// Restar 5 minutos\nfecha.setMinutes(fecha.getMinutes() - 5);\n\n// Formatear el resultado como \"YYYY-MM-DD HH:mm:ss\" en la hora local del offset original\nfunction pad(n) {\n  return n.toString().padStart(2, '0');\n}\n\nconst yyyy = fecha.getFullYear();\nconst mm = pad(fecha.getMonth() + 1);\nconst dd = pad(fecha.getDate());\nconst hh = pad(fecha.getHours()-5);\nconst mi = pad(fecha.getMinutes());\nconst ss = pad(fecha.getSeconds());\n\nconst detectionDateFormat = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;\n\nreturn [{ json: { detectionDateFormat } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -680,
+        560
+      ],
+      "id": "f4f85300-dd80-4fed-b9bc-57fd90829a97",
+      "name": "Code"
+    },
+    {
+      "parameters": {
+        "operation": "keys",
+        "keyPattern": "=*_buffer"
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        540,
+        1020
+      ],
+      "id": "5f57a421-1e5f-48f6-8664-0418e3dc95b2",
+      "name": "Redis",
+      "executeOnce": true,
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mergeByFields": {
+          "values": [
+            {
+              "field1": "uuid",
+              "field2": "uuid"
+            }
+          ]
+        },
+        "resolve": "preferInput1",
+        "options": {
+          "skipFields": "",
+          "multipleMatches": "first"
+        }
+      },
+      "type": "n8n-nodes-base.compareDatasets",
+      "typeVersion": 2.3,
+      "position": [
+        200,
+        500
+      ],
+      "id": "285d91fa-cb51-4cc8-bfc0-6eaba535c8d4",
+      "name": "Compare Datasets",
+      "executeOnce": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "jsCode": "// ✅ Así sí funciona\nreturn items.flatMap(item => {\n  // Aquí 'item' SÍ existe como cada uno del array\n  const input = item.json;\n  // ...lo que quieras hacer\n  // Por ejemplo:\n  return Object.keys(input).map(bufferKey => {\n    return {\n      json: {\n        key: bufferKey,\n        uuid: input[bufferKey][0] // suponiendo que es un array de un solo elemento\n      }\n    }\n  });\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        240,
+        980
+      ],
+      "id": "a38f706d-317b-440e-930f-03706929090d",
+      "name": "Code1"
+    },
+    {
+      "parameters": {
+        "content": "Este nodo mapea lo valores mapeados de la db SSO hacia el tatype de la db DETECTIONS.",
+        "width": 540
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        -600,
+        40
+      ],
+      "id": "b3fc0100-be33-4a12-bb0a-6b63d9f5eb80",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "operation": "pop",
+        "list": "={{ $('Code1').item.json.key }}",
+        "tail": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.redis",
+      "typeVersion": 1,
+      "position": [
+        420,
+        800
+      ],
+      "id": "0f0dbfb0-9b1e-4415-85e6-53e899a442cd",
+      "name": "Redis1",
+      "disabled": true
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        720,
+        800
+      ],
+      "id": "f641a66e-6cb0-442c-8250-1098f8206d85",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://172.31.190.111:8081/message/sendMedia/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "=json",
+        "specifyBody": "json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"number\": \"120363405083104814@g.us\",\n  \"mediatype\": \"image\",\n  \"mimetype\": \"image/png\",\n  \"caption\": \"*Alerta*: {{ $json.tipo_gls }}\\n*Fecha*: {{ $json.detectionDate }}\",\n  \"media\": \"{{ $json.image_url }}\",\n  \"fileName\": \"Imagem.png\",\n  \"delay\": 1000\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        880,
+        460
+      ],
+      "id": "2de05ee7-984f-4a2c-b832-7962823c394f",
+      "name": "send_wsp_message_file",
+      "executeOnce": true,
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PHb1Lh5TJbYAM8Zi",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "mensaje a INDIVIDUOS"
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        80,
+        -20
+      ],
+      "id": "a53ddd33-7c04-47bd-b93c-6f0e1c90dcd5",
+      "name": "HTTP Request1",
+      "disabled": true
+    },
+    {
+      "parameters": {
+        "mode": "expression",
+        "numberOutputs": 13,
+        "output": "={{ $json.id_type }}"
+      },
+      "type": "n8n-nodes-base.switch",
+      "typeVersion": 3.2,
+      "position": [
+        720,
+        140
+      ],
+      "id": "9b789366-53f7-428d-88d3-7b90204e0464",
+      "name": "Switch"
+    },
+    {
+      "parameters": {
+        "putAllInOneKey": false
+      },
+      "type": "n8n-nodes-globals.globalConstants",
+      "typeVersion": 1,
+      "position": [
+        -1300,
+        560
+      ],
+      "id": "87acbb98-ccd5-4c5e-8572-2547ae2bdf0f",
+      "name": "Global Constants",
+      "credentials": {
+        "globalConstantsApi": {
+          "id": "HZMJv0NkG4q9uNDh",
+          "name": "Global Constants account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "12b095f0-e007-4037-af4f-8679accaadef",
+              "name": "HEADER_AUTH_NAME",
+              "value": "={{ $json.HEADER_AUTH_NAME }}",
+              "type": "string"
+            },
+            {
+              "id": "93c106e8-cc82-4e99-8299-50d51c9cc700",
+              "name": "HEADER_AUTH_VALUE",
+              "value": "={{ $json.HEADER_AUTH_VALUE }}",
+              "type": "string"
+            },
+            {
+              "id": "8809c78c-8761-4227-941b-c29b538cea24",
+              "name": "DB_HOST_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_HOST_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "2f13489e-1f1d-40a9-81fb-00278c13a3cf",
+              "name": "DB_PORT_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_PORT_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "0c09333e-3087-40f0-908c-97f6e03f878a",
+              "name": "DB_USER_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_USER_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "9111c372-7480-4cbe-b467-8bf6f2173966",
+              "name": "DB_PASS_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_PASS_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "cda11027-390e-4ecb-a334-bed54d226f36",
+              "name": "DB_HOST_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_HOST_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "b9ad7d1d-d718-4360-a496-561925f86972",
+              "name": "DB_PORT_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_PORT_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "f185f3a1-2905-4722-8297-c6debe1b6dcb",
+              "name": "DB_USER_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_USER_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "292c3184-289c-4ed0-95c9-618a9fec8e4c",
+              "name": "DB_PASS_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_PASS_SSO_DELIRYUMAI }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1100,
+        560
+      ],
+      "id": "d0fe5a13-c242-4c7b-a985-60dedfebe422",
+      "name": "CREDENTIALS"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  u.id,\n  u.first_name,\n  u.last_name,\n  n.type_cod,\n  u.phone,\n  u.email,\n  n.active_whatsapp \nFROM\n  ta_user u\nJOIN\n  ta_user_notification_pref n ON u.id = n.id_user\nWHERE\n  u.id_company = {{ $('Global Constants').item.json.ID_COMPANY }};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        -520,
+        260
+      ],
+      "id": "dcb48ae3-82f1-40d5-99fd-3aeca8414170",
+      "name": "SELECT_SSO_USER",
+      "credentials": {
+        "mySql": {
+          "id": "fyZeMX7LQX2DTNA2",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "\n\n  SELECT\n    d.id,\n    d.uuid,\n    d.detectionDate,\n    d.id_company,\n    d.extraData,\n    d.id_type,\n    t.gls AS tipo_gls,\n    i.imageURL AS image_url\nFROM\n    ta_detection d\nLEFT JOIN\n    ta_type t ON d.id_type = t.id\nLEFT JOIN\n    ta_image i ON d.image_id = i.id\nWHERE\n    d.detectionDate > \"{{ $json.detectionDateFormat }}\"\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        -500,
+        560
+      ],
+      "id": "84718b1a-b2a3-431b-a2f0-ca301191f6cb",
+      "name": "TA_DETECTION_ALERTS",
+      "credentials": {
+        "mySql": {
+          "id": "gZDVasBjpCUUltgb",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "const users = $('SELECT_SSO_USER').all();\nconst mapping_table = {\n  \"epp\": 1,\n  \"zona_rtg\": 2,\n  \"flujo_vehicular\": 3,\n  \"cerco_perimetral\": 4,\n  \"detencion\": 5,\n  \"congestion_vehicular\": 6,\n  \"hombre-maquina\": 8,\n  \"uso_celular\": 11,\n  \"disco_pare\": 12,\n  \"velocidad\": 13\n};\n\nconst output = [];\n\nfor (const item of users) {\n  const user = item.json;\n\n  const cod = user.type_cod?.toLowerCase(); // normaliza\n  user.type_cod = mapping_table[cod] ?? null;\n\n  output.push({ json: user });\n}\n\nreturn output;\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -340,
+        260
+      ],
+      "id": "52c69e01-5d0a-4080-8202-feac6bb7b788",
+      "name": "mapping type_cod->ta_type"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution_api:8080/message/sendText/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "bodyParameters": {
+          "parameters": [
+            {
+              "name": "number",
+              "value": "120363418615703087@g.us"
+            },
+            {
+              "name": "text",
+              "value": "=1"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        560
+      ],
+      "id": "77f406b1-94cc-4dc3-ba0b-3711a0a16cc8",
+      "name": "EAPI_send_message",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PHb1Lh5TJbYAM8Zi",
+          "name": "Header Auth account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "301d0f86-86bf-484c-aa6b-93ac58b64f93",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -1320,
+        300
+      ],
+      "id": "e2755506-9cfd-4389-ac5a-2f2a29420ecf",
+      "name": "Webhook",
+      "webhookId": "301d0f86-86bf-484c-aa6b-93ac58b64f93"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution_api:8080/chat/findChats/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "options": {
+          "lowercaseHeaders": true
+        }
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -880,
+        300
+      ],
+      "id": "769c17bb-48e9-4f8b-ac0e-45bf1765a954",
+      "name": "EAPI_send_message1",
+      "executeOnce": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "PHb1Lh5TJbYAM8Zi",
+          "name": "Header Auth account"
+        }
+      }
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Global Constants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code": {
+      "main": [
+        [
+          {
+            "node": "TA_DETECTION_ALERTS",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "SELECT_SSO_USER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Redis": {
+      "main": [
+        [
+          {
+            "node": "Code1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Compare Datasets": {
+      "main": [
+        [
+          {
+            "node": "Switch",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [],
+        [],
+        [
+          {
+            "node": "Redis1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Code1": {
+      "main": [
+        [
+          {
+            "node": "Compare Datasets",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Redis1": {
+      "main": [
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Switch": {
+      "main": [
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [],
+        [
+          {
+            "node": "send_wsp_message_file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Global Constants": {
+      "main": [
+        [
+          {
+            "node": "CREDENTIALS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CREDENTIALS": {
+      "main": [
+        [
+          {
+            "node": "EAPI_send_message1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TA_DETECTION_ALERTS": {
+      "main": [
+        []
+      ]
+    },
+    "SELECT_SSO_USER": {
+      "main": [
+        [
+          {
+            "node": "mapping type_cod->ta_type",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EAPI_send_message": {
+      "main": [
+        [
+          {
+            "node": "Code",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "b912e360-e1ed-43ab-a641-6042bedcb6cf",
+  "meta": {
+    "instanceId": "4cc77360dedaa09910a34bf52a350bc244787d3b0db8a69e7c12a44f7a849edb"
+  },
+  "id": "18p4Ybef3PDfOVpS",
+  "tags": [
+    {
+      "createdAt": "2025-06-11T15:52:12.506Z",
+      "updatedAt": "2025-06-11T15:52:12.506Z",
+      "id": "sOHdmoJlAi0AXDi1",
+      "name": "personal"
+    }
+  ]
+}

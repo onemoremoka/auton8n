@@ -1,0 +1,31 @@
+# Entornos y variables
+.env
+evolution.env
+
+# Archivos y carpetas de datos persistentes
+evolution_instances/
+evolution_store/
+
+# Archivos de logs
+*.log
+
+# Archivos temporales del sistema
+*.swp
+*.swo
+*.tmp
+
+# Archivos de salida de n8n
+n8n_storage/
+db_storage/
+
+# Archivos de backup
+*.bak
+*.old
+
+# Archivos de configuración de usuario
+.vscode/
+.idea/
+.DS_Store
+
+# Otros
+node_modules/
