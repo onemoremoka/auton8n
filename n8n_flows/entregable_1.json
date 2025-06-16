@@ -1,0 +1,555 @@
+{
+  "name": "My workflow",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "minutes",
+              "minutesInterval": 10
+            },
+            {}
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.2,
+      "position": [
+        -1300,
+        640
+      ],
+      "id": "398a1807-ec04-4bc1-b2b8-545068b0a2d9",
+      "name": "Schedule Trigger",
+      "notesInFlow": true
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution_api:8080/message/sendMedia/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "=json",
+        "specifyBody": "json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"number\": \"{{ $json.remote_jid }}\",\n  \"mediatype\": \"image\",\n  \"mimetype\": \"image/png\",\n  \"caption\": \"🚧 *Alerta Detectada*🚧\\n\\n*funcionalidad*: {{$json.func}}\\n*cam:* {{ $json.camera }}\\n*fecha:* {{ $json.detection_day }}\\n*hora*:{{$json.detection_time}}\\n*ID*: {{ $json.ID }}\",\n  \"media\": \"{{ $json.image_url }}\",\n  \"fileName\": \"alerta.png\",\n  \"delay\": 100\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        1040,
+        620
+      ],
+      "id": "d4dc338d-448b-41b5-a229-bfa30b2a7a2b",
+      "name": "send_wsp_message_file",
+      "executeOnce": false,
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "rRsxt9otWY5F1agK",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "mensaje a INDIVIDUOS"
+    },
+    {
+      "parameters": {
+        "putAllInOneKey": false
+      },
+      "type": "n8n-nodes-globals.globalConstants",
+      "typeVersion": 1,
+      "position": [
+        -1060,
+        640
+      ],
+      "id": "c0b13b4b-d268-46a2-9c7a-b2da5671588c",
+      "name": "Global Constants",
+      "credentials": {
+        "globalConstantsApi": {
+          "id": "jM4rJHiJWzadW2or",
+          "name": "Global Constants account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "  SELECT\n    d.id,\n    d.uuid,\n    d.detectionDate,\n    d.id_company,\n    d.extraData,\n    d.id_type,\n    t.cod AS type_string,\n    i.imageURL AS image_url,\n    cl.ip as IP,\n    cl.lat,\n    cl.lng\nFROM\n    ta_detection d\nLEFT JOIN\n    ta_type t ON d.id_type = t.id\nLEFT JOIN\n    ta_image i ON d.image_id = i.id\nLEFT JOIN\n  ta_camera_location cl ON JSON_UNQUOTE(JSON_EXTRACT(d.extraData, '$.camera')) = cl.camera\nWHERE\n    d.detectionDate > \"{{ $json.detectionDateFormat}}\"\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        -380,
+        640
+      ],
+      "id": "e6fc093b-ee3a-40a6-a0da-cef428f2aff9",
+      "name": "TA_DETECTION_ALERTS",
+      "alwaysOutputData": true,
+      "credentials": {
+        "mySql": {
+          "id": "6BaFN6Ktr3cstYc6",
+          "name": "MySQL account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// ESTE CODESNIPPER RESTA 5 MINUTOS A LA FECHA ACTUAL \nconst min_ = 10\n\n\n// Tomar el timestamp ISO con offset, ejemplo: \"2025-06-03T15:49:34-04:00\"\nconst fechaOriginal = $('Global Constants').first().json.timestamp\n\n// Convertir a objeto Date (JavaScript ajusta automáticamente según el offset del string)\nconst fecha = new Date(fechaOriginal);\n\n// Restar 5 minutos\nfecha.setMinutes(fecha.getMinutes() - min_);\n\n// Formatear el resultado como \"YYYY-MM-DD HH:mm:ss\" en la hora local del offset original\nfunction pad(n) {\n  return n.toString().padStart(2, '0');\n}\n\nconst yyyy = fecha.getFullYear();\nconst mm = pad(fecha.getMonth() + 1);\nconst dd = pad(fecha.getDate());\nconst hh = pad(fecha.getHours()-4);\nconst mi = pad(fecha.getMinutes());\nconst ss = pad(fecha.getSeconds());\n\nconst detectionDateFormat = `${yyyy}-${mm}-${dd} ${hh}:${mi}:${ss}`;\n\nreturn [{ json: { detectionDateFormat } }];\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -600,
+        640
+      ],
+      "id": "a238a274-66a4-4cb9-81e8-ee74b454f5fe",
+      "name": "MENOS X MINUTOS"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"detection_day\": \"{{ $('MAPPING_FORMAT').item.json.detectionDate.toDateTime().format('dd/LL/yyyy')}}\",\n  \"detection_time\": \"{{ $('MAPPING_FORMAT').item.json.detectionDate.toDateTime().format(\"HH:mm\")}}\",\n  \"image_url\": \"{{ $('MAPPING_FORMAT').item.json.image_url }}\",\n  \"camera\": \"{{ $('MAPPING_FORMAT').item.json.extraData.parseJson().camera }}\",\n  \"func\": \"{{ $('MAPPING_FORMAT').item.json.type_string}}\",\n  \"area\": {{ $('MAPPING_FORMAT').item.json.type_area_id }},\n  \"IP\": \"{{ $('MAPPING_FORMAT').item.json.IP }}\",\n  \"location\": \"({{ $('MAPPING_FORMAT').item.json.lat }}, {{ $('MAPPING_FORMAT').item.json.lng}})\",\n  \"remote_jid\": \"{{ $json.remote_jid }}\",\n  \"remote_name\": \"{{ $json.remote_name }}\",\n  \"ID\": \"{{ $('MAPPING_FORMAT').item.json.id }}\"\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        640,
+        620
+      ],
+      "id": "4d5f19ad-4556-4117-a4ef-b028a99a1b12",
+      "name": "input_format"
+    },
+    {
+      "parameters": {
+        "content": "DYNAMIC PIPELINE",
+        "height": 220,
+        "width": 1020
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "typeVersion": 1,
+      "position": [
+        580,
+        580
+      ],
+      "id": "b1c985f1-d97d-46dd-b892-71f3a22895ca",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "12b095f0-e007-4037-af4f-8679accaadef",
+              "name": "HEADER_AUTH_NAME",
+              "value": "={{ $json.HEADER_AUTH_NAME }}",
+              "type": "string"
+            },
+            {
+              "id": "93c106e8-cc82-4e99-8299-50d51c9cc700",
+              "name": "HEADER_AUTH_VALUE",
+              "value": "={{ $json.HEADER_AUTH_VALUE }}",
+              "type": "string"
+            },
+            {
+              "id": "8809c78c-8761-4227-941b-c29b538cea24",
+              "name": "DB_HOST_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_HOST_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "2f13489e-1f1d-40a9-81fb-00278c13a3cf",
+              "name": "DB_PORT_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_PORT_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "0c09333e-3087-40f0-908c-97f6e03f878a",
+              "name": "DB_USER_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_USER_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "9111c372-7480-4cbe-b467-8bf6f2173966",
+              "name": "DB_PASS_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_PASS_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "cda11027-390e-4ecb-a334-bed54d226f36",
+              "name": "DB_HOST_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_HOST_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "b9ad7d1d-d718-4360-a496-561925f86972",
+              "name": "DB_PORT_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_PORT_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "f185f3a1-2905-4722-8297-c6debe1b6dcb",
+              "name": "DB_USER_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_USER_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "292c3184-289c-4ed0-95c9-618a9fec8e4c",
+              "name": "DB_PASS_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_PASS_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "8242d21d-1a1d-4905-b22f-7a43cc9f4208",
+              "name": "DB_HOST_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_HOST_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            },
+            {
+              "id": "ab20dea6-a87e-474c-a298-dbf5959f5a1b",
+              "name": "DB_PORT_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_PORT_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            },
+            {
+              "id": "d32f49a9-26c8-453f-8be1-99f90b6cf76d",
+              "name": "DB_USER_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_USER_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            },
+            {
+              "id": "67c2a795-b5e4-4e42-b7b8-2bf690819543",
+              "name": "DB_PASS_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_PASS_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -840,
+        640
+      ],
+      "id": "11e1f819-021b-456f-9adc-622f21b4cdb1",
+      "name": "CREDENTIALS"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  id,\n  remote_jid,\n  remote_name\nFROM\n  notifications.ta_remote_jid \nWHERE\n  ta_remote_jid.id={{ $json.type_area_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        380,
+        620
+      ],
+      "id": "d48ad82b-b565-4259-89d6-9d116a688ce4",
+      "name": "Postgres",
+      "executeOnce": false,
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "NIzo40zzcmsEGYJe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "jsCode": "// Mapa de id_type (1–13) hacia type_area_id (Security, Operation, Safety)\nconst typeToAreaMap = {\n  epp: 2, \n  zona_rtg: 2,\n  flujo_vehicular: 3,  // Safety\n  cerco_perimetral: 3,\n  detencion: 1,  // Operation\n  congestion_vehicular: 1,\n  \"hombre-maquina\": 2,\n  uso_celular: 2,\n  disco_pare: 3,\n  velocidad: 3\n};\n\n// Procesar todos los items de entrada\nreturn items.map(item => {\n  const detection = item.json;\n  const areaId = typeToAreaMap[detection.type_string] || null;\n\n  return {\n    json: {\n      ...detection,\n      type_area_id: areaId\n    }\n  };\n});\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        140,
+        620
+      ],
+      "id": "c559f3a7-08ef-45b6-8ba7-79278c8bf928",
+      "name": "MAPPING_FORMAT"
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "INSERT INTO \n  notifications.ta_notification_registry (\n    message_id,\n    status,\n    updated_by_user_id,\n    detection_id,\n    updated_at,\n    remote_id\n  )\nVALUES (\n  '{{$json.message_id}}',\n  0,\n  0,\n  {{$json.detection_id}},\n  TO_TIMESTAMP({{$json.message_timestamp}}),\n  (\n    SELECT id FROM notifications.ta_remote_jid WHERE remote_jid = '{{$json.remoteJid}}' LIMIT 1\n  )\n)\n  ON CONFLICT (detection_id) DO NOTHING;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1460,
+        620
+      ],
+      "id": "8f4dd7e3-55ea-40ef-8ba3-00ef0eb081a7",
+      "name": "Postgres1",
+      "credentials": {
+        "postgres": {
+          "id": "NIzo40zzcmsEGYJe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"remoteJid\":\"{{ $json.key.remoteJid }}\",\n  \"message_id\":\"{{ $json.key.id }}\",\n  \"message_timestamp\": \"{{ $now.format('X')}}\",\n  \"detection_id\": \"{{$('MAPPING_FORMAT').item.json.id}}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        1260,
+        620
+      ],
+      "id": "b069ed17-0811-4842-b4ad-cd0d50a1b6fb",
+      "name": "Edit Fields"
+    },
+    {
+      "parameters": {
+        "sortFieldsUi": {
+          "sortField": [
+            {
+              "fieldName": "detection_time",
+              "order": "descending"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.sort",
+      "typeVersion": 1,
+      "position": [
+        820,
+        620
+      ],
+      "id": "b1f82749-3030-4cae-972a-dfec68388850",
+      "name": "Sort"
+    },
+    {
+      "parameters": {},
+      "type": "n8n-nodes-base.noOp",
+      "typeVersion": 1,
+      "position": [
+        140,
+        820
+      ],
+      "id": "ecfb8b7d-3b99-482d-8a07-ed9e99a21571",
+      "name": "No Operation, do nothing"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "9a1f5be1-24c9-4b52-aa10-59e0b989ecfa",
+              "leftValue": "={{ $json.uuid }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        640
+      ],
+      "id": "fce685fa-562c-45b8-acda-89f253f6e750",
+      "name": "If"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "Global Constants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Global Constants": {
+      "main": [
+        [
+          {
+            "node": "CREDENTIALS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MENOS X MINUTOS": {
+      "main": [
+        [
+          {
+            "node": "TA_DETECTION_ALERTS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "TA_DETECTION_ALERTS": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "input_format": {
+      "main": [
+        [
+          {
+            "node": "Sort",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CREDENTIALS": {
+      "main": [
+        [
+          {
+            "node": "MENOS X MINUTOS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "input_format",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "MAPPING_FORMAT": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "send_wsp_message_file": {
+      "main": [
+        [
+          {
+            "node": "Edit Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Postgres1": {
+      "main": [
+        []
+      ]
+    },
+    "Edit Fields": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sort": {
+      "main": [
+        [
+          {
+            "node": "send_wsp_message_file",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "No Operation, do nothing": {
+      "main": [
+        []
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "MAPPING_FORMAT",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "No Operation, do nothing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "dd455e9d-8e10-4235-a970-db6b2b697aa3",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e3d4e3ceaa9c90b9be6d12ceaa50ca48f0b87fd37a53cfabae41d44ee37b44d7"
+  },
+  "id": "mhek2sx0fZ6nFdtM",
+  "tags": [
+    {
+      "createdAt": "2025-06-15T06:12:46.218Z",
+      "updatedAt": "2025-06-15T06:12:46.218Z",
+      "id": "7EZlsMXNqihGXFMQ",
+      "name": "personal"
+    }
+  ]
+}

@@ -59,3 +59,22 @@ Este flujo automatiza el envío de notificaciones de alertas generadas por el si
   ```sh
   docker-compose down
   ```
+
+  ---
+
+añadir al nodo Global constants de n8n:
+
+DB_HOST_SSO_DELIRYUMAI=dev-sso.mysql.database.azure.com
+DB_PORT_SSO_DELIRYUMAI=3306
+DB_USER_SSO_DELIRYUMAI=marcos@bluelatam.com
+DB_PASS_SSO_DELIRYUMAI=Deliryum2025$$
+
+HEADER_AUTH_NAME=apikey
+HEADER_AUTH_VALUE="FBECCE6E0585-482D-94A4-53BADF68F521"
+
+DB_HOST_DETECTIONS_DELIRYUMAI=prod-detectionsv2.mysql.database.azure.com
+DB_PORT_DETECTIONS_DELIRYUMAI=3306
+DB_USER_DETECTIONS_DELIRYUMAI=marcos@bluelatam.com
+DB_PASS_DETECTIONS_DELIRYUMAI=Deliryum2025$$
+
+ID_COMPANY=2

@@ -1,0 +1,783 @@
+{
+  "name": "My workflow 2",
+  "nodes": [
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  u.id,\n  u.first_name,\n  u.last_name,\n  u.phone,\n  u.id_role,\n  u.email,\n  r.role_name\nFROM\n  ta_user u\nJOIN\n  ta_role r ON u.id_role = r.id\nWHERE\n  u.id_company = {{ $('Global Constants').item.json.ID_COMPANY}};\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.mySql",
+      "typeVersion": 2.4,
+      "position": [
+        -980,
+        -160
+      ],
+      "id": "bc87026c-0ea3-42bd-8539-526a41bc53fe",
+      "name": "SELECT_SSO_USER",
+      "credentials": {
+        "mySql": {
+          "id": "j1P1DXxHHVolae3W",
+          "name": "MySQL account 2"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "301d0f86-86bf-484c-aa6b-93ac58b64f93",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [
+        -2200,
+        -140
+      ],
+      "id": "e303639e-d83b-4eed-8bfc-56613458727a",
+      "name": "Webhook",
+      "webhookId": "301d0f86-86bf-484c-aa6b-93ac58b64f93"
+    },
+    {
+      "parameters": {
+        "putAllInOneKey": false
+      },
+      "type": "n8n-nodes-globals.globalConstants",
+      "typeVersion": 1,
+      "position": [
+        -2000,
+        -140
+      ],
+      "id": "419a4706-eb5b-4709-81e2-7b45c413cb23",
+      "name": "Global Constants",
+      "credentials": {
+        "globalConstantsApi": {
+          "id": "jM4rJHiJWzadW2or",
+          "name": "Global Constants account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "12b095f0-e007-4037-af4f-8679accaadef",
+              "name": "HEADER_AUTH_NAME",
+              "value": "={{ $json.HEADER_AUTH_NAME }}",
+              "type": "string"
+            },
+            {
+              "id": "93c106e8-cc82-4e99-8299-50d51c9cc700",
+              "name": "HEADER_AUTH_VALUE",
+              "value": "={{ $json.HEADER_AUTH_VALUE }}",
+              "type": "string"
+            },
+            {
+              "id": "8809c78c-8761-4227-941b-c29b538cea24",
+              "name": "DB_HOST_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_HOST_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "2f13489e-1f1d-40a9-81fb-00278c13a3cf",
+              "name": "DB_PORT_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_PORT_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "0c09333e-3087-40f0-908c-97f6e03f878a",
+              "name": "DB_USER_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_USER_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "9111c372-7480-4cbe-b467-8bf6f2173966",
+              "name": "DB_PASS_DETECTIONS_DELIRYUMAI",
+              "value": "={{ $json.DB_PASS_DETECTIONS_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "cda11027-390e-4ecb-a334-bed54d226f36",
+              "name": "DB_HOST_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_HOST_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "b9ad7d1d-d718-4360-a496-561925f86972",
+              "name": "DB_PORT_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_PORT_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "f185f3a1-2905-4722-8297-c6debe1b6dcb",
+              "name": "DB_USER_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_USER_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "292c3184-289c-4ed0-95c9-618a9fec8e4c",
+              "name": "DB_PASS_SSO_DELIRYUMAI",
+              "value": "={{ $json.DB_PASS_SSO_DELIRYUMAI }}",
+              "type": "string"
+            },
+            {
+              "id": "6669d49e-60d8-4dfe-a58c-dd48b42b35e2",
+              "name": "DB_HOST_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_HOST_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            },
+            {
+              "id": "1144c7ae-8acc-41d9-b93d-0d63de8247da",
+              "name": "DB_PORT_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_PORT_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            },
+            {
+              "id": "4902fa87-0b1c-4a2d-a57f-5bf0e8c557da",
+              "name": "DB_USER_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_USER_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            },
+            {
+              "id": "e530c732-499d-43f5-ad77-41c7a5aa6584",
+              "name": "DB_PASS_NOTIFICATIONS_POSTGRES",
+              "value": "={{ $json.DB_PASS_NOTIFICATIONS_POSTGRES }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1820,
+        -140
+      ],
+      "id": "0b14dee8-7a53-4047-9a3e-18538be6f5db",
+      "name": "CREDENTIALS"
+    },
+    {
+      "parameters": {
+        "mode": "raw",
+        "jsonOutput": "={\n  \"event\": \"{{ $('Webhook').item.json.body.event }}\",\n  \"instance_wsp\": \"{{ $('Webhook').item.json.body.instance }}\",\n  \"remote_jid\": \"{{ $('Webhook').item.json.body.data.key.remoteJid }}\",\n  \"number_user: \"{{ $('Webhook').item.json.body.data.key.participant.split(\"@\")[0] }}\",\n  \"apodo_user\": \"{{ $('Webhook').item.json.body.data.pushName }}\",\n  \"message_id\": \"{{ $('Webhook').item.json.body.data.message.reactionMessage.key.id}}\",\n  \"react\": \"{{ $('Webhook').item.json.body.data.message.reactionMessage.text }}\",\n  \"user_jid\": \"{{ $('Webhook').item.json.body.data.key.participant }}\"\n} ",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -1640,
+        -140
+      ],
+      "id": "7b3f8028-bf74-4641-8f17-d024bafadbe6",
+      "name": "RESPONSE_WEBHOOK"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fec97729-0712-4532-92e8-7b56dbf54a2e",
+              "leftValue": "={{ $json.phone }}",
+              "rightValue": "={{ $('RESPONSE_WEBHOOK').item.json.message_id }}",
+              "operator": {
+                "type": "string",
+                "operation": "exists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {
+          "ignoreCase": false
+        }
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -540,
+        -180
+      ],
+      "id": "22b6d5cb-4ff1-4983-b792-a653c8e21fff",
+      "name": "If",
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "a8f2ed44-77e2-4e45-8d75-87f2198215aa",
+              "leftValue": "={{ $json.phone?.toNumber()}}",
+              "rightValue": "={{ $('RESPONSE_WEBHOOK').item.json.number_user.replace('+', '').toNumber() }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            },
+            {
+              "id": "cf2c49c3-d69e-49c1-a0e8-121bc2b41796",
+              "leftValue": "",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "equals",
+                "name": "filter.operator.equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -780,
+        -160
+      ],
+      "id": "2b73a4a5-2a0c-4102-8dab-15b54247e3b9",
+      "name": "EXIST_USER_IN_DB",
+      "executeOnce": false,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  detection_id, \n  updated_at,\n  status,\n  updated_by_user_id,\n  message_id\nFROM notifications.ta_notification_registry\nWHERE message_id = '{{$(\"RESPONSE_WEBHOOK\").item.json.message_id}}';\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -1180,
+        -160
+      ],
+      "id": "33bc150f-0202-4f0d-828d-f9743980a20e",
+      "name": "Postgres",
+      "credentials": {
+        "postgres": {
+          "id": "NIzo40zzcmsEGYJe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "425fd0ca-c13b-4746-bae4-c16033eb43de",
+              "leftValue": "={{ $('Postgres').item.json.updated_by_user_id }}",
+              "rightValue": 0,
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -140,
+        -200
+      ],
+      "id": "f18fb6e5-ffed-45b0-a892-045f9f0f9244",
+      "name": "If1",
+      "notesInFlow": true,
+      "executeOnce": false,
+      "notes": "Si es que status/updated_by_user_id son cero implica que esa alerta no ha sido revisada poor un usuario"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "8848b217-b6e8-4713-8c08-14598d5c9fc5",
+              "leftValue": "={{ $(\"react_c\").item.json.reaction_code}}",
+              "rightValue": -1,
+              "operator": {
+                "type": "number",
+                "operation": "notEquals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        340,
+        -320
+      ],
+      "id": "2718e4c1-b22b-4d74-8c59-bdb48628b091",
+      "name": "If2",
+      "executeOnce": true
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "UPDATE notifications.ta_notification_registry\nSET\n  status = {{ $json.reaction_code }},\n  updated_by_user_id = {{ $json.id }},\n  updated_at = NOW()\nWHERE\n  message_id = '{{ $(\"react_c\").item.json.message_id }}';",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        580,
+        -500
+      ],
+      "id": "45be2ba6-aa3d-459e-a1ed-acf45c75da6b",
+      "name": "Postgres1",
+      "executeOnce": true,
+      "alwaysOutputData": true,
+      "credentials": {
+        "postgres": {
+          "id": "NIzo40zzcmsEGYJe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT \n  id,\n  react_code,\n  react_gls,\n  react_emoji,\n  react_description,\n  is_active\nFROM \n  notifications.ta_reaction_map\nORDER BY \n  react_code ASC;\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        -320,
+        -200
+      ],
+      "id": "b972dbcc-9bb4-4894-94d0-b56992115443",
+      "name": "REACTION_DB",
+      "executeOnce": true,
+      "credentials": {
+        "postgres": {
+          "id": "NIzo40zzcmsEGYJe",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution_api:8080/message/sendtext/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "=json",
+        "specifyBody": "json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"number\": \"{{ $('RESPONSE_WEBHOOK').item.json.remote_jid }}\",\n   \"text\": \"*InfoID: {{ $('Postgres').item.json.detection_id }}*\\nEsta alerta ya fue revisada por el usuario {{ $('RESPONSE_WEBHOOK').item.json.apodo_user }} ({{ $('If').item.json.first_name }})  con estado *{{ $json.react_gls }}*\",\n  \"delay\": 50\n}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        280,
+        -120
+      ],
+      "id": "c9381878-18c1-42d8-80f8-f5f834d47b53",
+      "name": "Alerta_ya_revisada",
+      "executeOnce": false,
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "rRsxt9otWY5F1agK",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "mensaje a INDIVIDUOS"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution_api:8080/message/sendtext/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "=json",
+        "specifyBody": "json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"number\": \"{{ $('RESPONSE_WEBHOOK').item.json.remote_jid }}\",\n  \"text\": \"*InfoID: {{ $('Postgres').item.json.detection_id }}*\\n El número {{ $('RESPONSE_WEBHOOK').item.json.number_user }} ({{ $('RESPONSE_WEBHOOK').item.json.apodo_user }}) no está vinculado a ningún usuario en Deliryum.AI\",\n  \"delay\": 50\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        -320,
+        0
+      ],
+      "id": "8e7b7418-c988-46fa-bc29-684b5ee1fbc5",
+      "name": "numero_no_registrado",
+      "executeOnce": false,
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "rRsxt9otWY5F1agK",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "mensaje a INDIVIDUOS"
+    },
+    {
+      "parameters": {
+        "jsCode": "const reactions = $('REACTION_DB').all();\n\nconst emojiToCodeMap = reactions.reduce((acc, item) => {\n  const emoji = item.json.react_emoji;\n  const code = item.json.react_code;\n  if (emoji && code !== undefined) {\n    acc[emoji] = code;\n  }\n  return acc;\n}, {});\n\nconst inputEmoji = $('RESPONSE_WEBHOOK').first().json.react;\nconst reactionCode = emojiToCodeMap[inputEmoji] ?? -1;\n\n\nconst message = $('Postgres').first().json;\nconst message_2 = $('EXIST_USER_IN_DB').first().json;\nconst reaction = $('RESPONSE_WEBHOOK').first().json.react;\n\n\nreturn [\n  {\n    json: {\n      ...message,\n      ...message_2,\n      reaction_code: reactionCode\n    },\n    pairedItem: { item: 0 } // o el índice correcto si estás iterando múltiples entradas\n  }\n];"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        160,
+        -320
+      ],
+      "id": "8563c89b-d96f-45c3-aded-2a3fff3a207d",
+      "name": "react_c",
+      "executeOnce": false,
+      "alwaysOutputData": true
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "22a144b1-afe0-4aef-a40d-b6aafb506fb3",
+              "leftValue": "={{ $json.react }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notEmpty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        -1440,
+        -140
+      ],
+      "id": "9f0bc475-bf2d-40d6-9346-d5c2032a7e26",
+      "name": "If3"
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://evolution_api:8080/message/sendtext/wspbot",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "=json",
+        "specifyBody": "json",
+        "bodyParameters": {
+          "parameters": [
+            {}
+          ]
+        },
+        "jsonBody": "={\n  \"number\": \"{{ $('RESPONSE_WEBHOOK').first().json.remote_jid }}\",\n  \"text\": \"InfoID: {{ $('Postgres').item.json.detection_id }}\\nLa reacción ingresada no es válida. Usa una de las siguientes opciones:\\n{{ $('REACTION_DB').all().map(item => `${item.json.react_emoji}: ${item.json.react_gls}`).join('\\\\n') }}\",\n  \"delay\": 50\n}\n",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        600,
+        -220
+      ],
+      "id": "e48a6996-a27e-4dec-92d4-dcb2126b3bb9",
+      "name": "reaccion_no_valida",
+      "executeOnce": false,
+      "notesInFlow": true,
+      "credentials": {
+        "httpHeaderAuth": {
+          "id": "rRsxt9otWY5F1agK",
+          "name": "Header Auth account"
+        }
+      },
+      "notes": "mensaje a INDIVIDUOS"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "afc1db17-c0bf-48ae-b8b6-6ab853e45855",
+              "leftValue": "={{ $('REACTION_DB').item.json.react_code }}",
+              "rightValue": "={{ $('Postgres').item.json.status }}",
+              "operator": {
+                "type": "number",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        100,
+        -120
+      ],
+      "id": "6eb3e454-2198-44d6-b9a7-a648e6400230",
+      "name": "Filter"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Global Constants": {
+      "main": [
+        [
+          {
+            "node": "CREDENTIALS",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "CREDENTIALS": {
+      "main": [
+        [
+          {
+            "node": "RESPONSE_WEBHOOK",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Global Constants",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "RESPONSE_WEBHOOK": {
+      "main": [
+        [
+          {
+            "node": "If3",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [
+          {
+            "node": "REACTION_DB",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "numero_no_registrado",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "SELECT_SSO_USER": {
+      "main": [
+        [
+          {
+            "node": "EXIST_USER_IN_DB",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "EXIST_USER_IN_DB": {
+      "main": [
+        [
+          {
+            "node": "If",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        []
+      ]
+    },
+    "Postgres": {
+      "main": [
+        [
+          {
+            "node": "SELECT_SSO_USER",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If1": {
+      "main": [
+        [
+          {
+            "node": "react_c",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Filter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If2": {
+      "main": [
+        [
+          {
+            "node": "Postgres1",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "reaccion_no_valida",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "REACTION_DB": {
+      "main": [
+        [
+          {
+            "node": "If1",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Alerta_ya_revisada": {
+      "main": [
+        []
+      ]
+    },
+    "numero_no_registrado": {
+      "main": [
+        []
+      ]
+    },
+    "react_c": {
+      "main": [
+        [
+          {
+            "node": "If2",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If3": {
+      "main": [
+        [
+          {
+            "node": "Postgres",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter": {
+      "main": [
+        [
+          {
+            "node": "Alerta_ya_revisada",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": true,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "339db445-180f-478a-9b8a-96da85dc30e1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "e3d4e3ceaa9c90b9be6d12ceaa50ca48f0b87fd37a53cfabae41d44ee37b44d7"
+  },
+  "id": "dWSQE1IXB49DlNeR",
+  "tags": []
+}
